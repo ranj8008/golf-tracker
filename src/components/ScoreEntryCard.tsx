@@ -20,16 +20,21 @@ const field =
   "bg-surface/70 outline-none transition focus:bg-card focus:ring-2 focus:ring-accent";
 const box = `h-11 w-full rounded-lg px-0 text-center text-base font-medium tabular-nums ${field}`;
 
+// Called after each keystroke in a box that's part of the auto-advance sequence.
+type Typed = (digits: string, el: HTMLInputElement) => void;
+
 function NumberCell({
   value,
   onChange,
   label,
   invalid,
+  onTyped,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   label: string;
   invalid?: boolean;
+  onTyped?: Typed;
 }) {
   return (
     <input
@@ -40,10 +45,12 @@ function NumberCell({
       enterKeyHint="next"
       aria-label={label}
       aria-invalid={invalid || undefined}
+      data-seq={onTyped ? "" : undefined}
       value={value ?? ""}
       onChange={(e) => {
         const digits = e.target.value.replace(/\D/g, "");
         onChange(digits === "" ? null : Number(digits));
+        onTyped?.(digits, e.target);
       }}
       onFocus={(e) => e.target.select()}
       className={`${box} ${invalid ? "text-down ring-2 ring-down" : ""}`}
@@ -80,11 +87,13 @@ function ScoreCell({
   toPar,
   onChange,
   label,
+  onTyped,
 }: {
   value: number | null;
   toPar: number | null;
   onChange: (v: number | null) => void;
   label: string;
+  onTyped: Typed;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const first = useRef(true);
@@ -115,9 +124,11 @@ function ScoreCell({
       enterKeyHint="next"
       aria-label={label}
       value={value ?? ""}
+      data-seq=""
       onChange={(e) => {
         const digits = e.target.value.replace(/\D/g, "");
         onChange(digits === "" ? null : Number(digits));
+        onTyped(digits, e.target);
       }}
       onFocus={(e) => e.target.select()}
       className={`mx-auto block size-11 px-0 text-center text-base tabular-nums transition-colors ${resultStyle(toPar)}`}
@@ -225,6 +236,38 @@ export default function ScoreEntryCard({
 }) {
   const nine = rows.length <= 9;
 
+  // Auto-advance: once a box can't take another digit, move to the next empty
+  // Score or Putts box further down the card (Pen is left out); at the end, close
+  // the keyboard. A score of 1 could be a hole in one or the start of 10+, so it
+  // waits a second for a second digit.
+  const tableRef = useRef<HTMLTableElement>(null);
+  const oneTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(oneTimer.current), []);
+  const advanceFrom = (el: HTMLInputElement) => {
+    const boxes = Array.from(
+      tableRef.current?.querySelectorAll<HTMLInputElement>("input[data-seq]") ??
+        [],
+    );
+    const next = boxes.slice(boxes.indexOf(el) + 1).find((b) => b.value === "");
+    if (next) next.focus();
+    else el.blur();
+  };
+  const scoreTyped: Typed = (digits, el) => {
+    clearTimeout(oneTimer.current);
+    if (digits === "") return;
+    if (digits === "1") {
+      oneTimer.current = setTimeout(() => {
+        if (document.activeElement === el && el.value === "1") advanceFrom(el);
+      }, 1000);
+      return;
+    }
+    advanceFrom(el);
+  };
+  const puttsTyped: Typed = (digits, el) => {
+    clearTimeout(oneTimer.current);
+    if (digits !== "") advanceFrom(el);
+  };
+
   // FIR: – → ✓ → ✗ → –
   const tapFir = (i: number) => {
     const v = entries[i].fir;
@@ -291,6 +334,7 @@ export default function ScoreEntryCard({
             value={e.score}
             toPar={r.toPar}
             onChange={(v) => setHole(i, { score: v })}
+            onTyped={scoreTyped}
           />
           {r.shots > 0 && (
             <span
@@ -308,6 +352,7 @@ export default function ScoreEntryCard({
             value={e.putts}
             invalid={badPutts.includes(r.hole)}
             onChange={(v) => setHole(i, { putts: v })}
+            onTyped={puttsTyped}
           />
         </td>
         <td className={td}>
@@ -345,7 +390,7 @@ export default function ScoreEntryCard({
 
   return (
     <div className="-mx-4 overflow-hidden border-y border-line bg-card sm:mx-0 sm:rounded-xl sm:border">
-      <table className="w-full table-fixed tabular-nums">
+      <table ref={tableRef} className="w-full table-fixed tabular-nums">
         <colgroup>
           <col className="w-[8%]" />
           <col className="hidden w-[8%] sm:table-column" />
