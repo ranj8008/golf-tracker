@@ -193,13 +193,15 @@ $$;
 revoke all on function public.save_round(jsonb, jsonb) from public, anon;
 grant execute on function public.save_round(jsonb, jsonb) to authenticated;
 
--- Starting course: Lambourne Golf Club, Orange tees (from the club scorecard), for
--- every login that doesn't have it yet. Create your login before running this; if
--- you ran it first, just run it again.
+-- Starting course: Lambourne Golf Club's Orange and Blue tees (from the club
+-- scorecard and course records), for every login. Adds what's missing; on tees you
+-- already have, only fills in a rating or slope that's blank, so your own edits stay.
+-- Create your login before running this; if you ran it first, just run it again.
 do $$
 declare
   u record;
   c uuid;
+  t record;
 begin
   for u in select id from auth.users loop
     select id into c from public.courses
@@ -209,14 +211,26 @@ begin
         values (u.id, 'Lambourne Golf Club', null)
         returning id into c;
     end if;
-    insert into public.tees (user_id, course_id, name, par, yards, stroke_index)
-      values (
-        u.id, c, 'Orange',
-        array[4,5,4,5,3,4,3,4,4, 4,4,5,3,5,4,4,3,4],
-        array[406,489,400,507,185,440,147,448,316, 384,425,516,169,517,363,339,138,386],
-        array[7,13,5,11,9,1,17,3,15, 6,2,16,10,14,12,4,18,8]
-      )
-      on conflict (course_id, name) do nothing;
+    for t in
+      select * from (values
+        ('Orange', 72.5, 129,
+          array[406,489,400,507,185,440,147,448,316, 384,425,516,169,517,363,339,138,386]),
+        ('Blue', 73.4, 135,
+          array[422,492,417,518,196,448,158,446,326, 400,438,530,181,542,374,350,148,412])
+      ) as v(name, rating, slope, yards)
+    loop
+      insert into public.tees
+          (user_id, course_id, name, course_rating, slope, par, yards, stroke_index)
+        values (
+          u.id, c, t.name, t.rating, t.slope,
+          array[4,5,4,5,3,4,3,4,4, 4,4,5,3,5,4,4,3,4],
+          t.yards,
+          array[7,13,5,11,9,1,17,3,15, 6,2,16,10,14,12,4,18,8]
+        )
+        on conflict (course_id, name) do update set
+          course_rating = coalesce(public.tees.course_rating, excluded.course_rating),
+          slope = coalesce(public.tees.slope, excluded.slope);
+    end loop;
   end loop;
 end $$;
 

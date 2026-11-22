@@ -21,6 +21,7 @@ import {
   today,
   type Course,
   type Round,
+  type Tee,
 } from "@/lib/data";
 import {
   blankEntry,
@@ -104,6 +105,18 @@ function writeDraft(d: Draft | null) {
     // Private browsing or storage blocked: carry on without a draft.
   }
 }
+
+// "Blue · 6,798 yds · 73.4 / 135" in the tees dropdown.
+const teeOption = (t: Tee) =>
+  [
+    t.name,
+    `${t.yards.reduce((a, b) => a + b, 0).toLocaleString("en-GB")} yds`,
+    t.course_rating !== null || t.slope !== null
+      ? `${t.course_rating ?? "–"} / ${t.slope ?? "–"}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
 const sized = (entries: HoleEntry[], n: number) =>
   Array.from({ length: n }, (_, i) => entries[i] ?? blankEntry());
@@ -311,7 +324,7 @@ export default function RoundForm({ round }: { round?: Round }) {
           onChange={pickTee}
           options={(course?.tees ?? []).map((t) => ({
             value: t.id,
-            label: t.name,
+            label: teeOption(t),
           }))}
           placeholder="Choose tees"
         />
