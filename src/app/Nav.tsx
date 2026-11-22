@@ -11,6 +11,9 @@ const icons: Record<string, React.ReactNode> = {
   add: <path d="M12 5v14M5 12h14" />,
   rounds: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   courses: <path d="M7 21V3l10 4-10 4M4 21h12" />,
+  honours: (
+    <path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6v4H9z" />
+  ),
   stats: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
   more: (
     <path
@@ -24,14 +27,17 @@ const icons: Record<string, React.ReactNode> = {
 
 type Page = { href: string; label: string; icon: string };
 
-// Four tabs, then More for the rest (as in Shankaholics). Honours joins More.
+// Four tabs, then More for the rest (as in Shankaholics).
 const main: Page[] = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/rounds", label: "Rounds", icon: "rounds" },
   { href: "/rounds/new", label: "Add round", icon: "add" },
   { href: "/stats", label: "Stats", icon: "stats" },
 ];
-const more: Page[] = [{ href: "/courses", label: "Courses", icon: "courses" }];
+const more: Page[] = [
+  { href: "/honours", label: "Honours", icon: "honours" },
+  { href: "/courses", label: "Courses", icon: "courses" },
+];
 
 function Icon({ name, active }: { name: string; active?: boolean }) {
   return (
