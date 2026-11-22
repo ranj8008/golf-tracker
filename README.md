@@ -41,13 +41,10 @@ yours is the only login.
    Run workflow. It creates the tables and rules, and adds Lambourne Golf Club's
    Orange tees to your login. Run it again whenever `setup.sql` changes; it's safe
    to re-run.
-3. **Course lookup** (optional, for rating and slope): get a free API key at
-   golfcourseapi.com.
-4. **Vercel**: import this repo, and add these environment variables before
+3. **Vercel**: import this repo, and add these environment variables before
    deploying:
    - `NEXT_PUBLIC_SUPABASE_URL`: Supabase → Project Settings → API → Project URL
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: the publishable key on the same page
-   - `GOLF_COURSE_API_KEY`: the key from step 3
 
    If you add or change a variable later, redeploy for it to take effect.
 
@@ -55,6 +52,12 @@ yours is the only login.
 
 `npm install`, copy `.env.example` to `.env.local` and fill it in, then
 `npm run dev`.
+
+## Adding a course
+
+Courses → Add a course, then fill in each hole's par, yards and stroke index from
+the club's scorecard (the S.I. column). Course rating and slope are on the card or
+in the My EG app. The app checks each stroke index is used once.
 
 ## Phases
 

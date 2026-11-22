@@ -15,7 +15,6 @@ create table if not exists public.courses (
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null check (length(trim(name)) > 0), -- "Lambourne Golf Club"
   location text,
-  api_id bigint, -- GolfCourseAPI course id, when imported from there
   created_at timestamptz not null default now()
 );
 alter table public.courses enable row level security;

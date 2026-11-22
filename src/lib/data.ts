@@ -18,7 +18,6 @@ export type Course = {
   id: string;
   name: string;
   location: string | null;
-  api_id: number | null;
   tees: Tee[];
 };
 
@@ -82,7 +81,7 @@ const fixRound = (r: Round): Round => ({
 export async function loadCourses(): Promise<Course[]> {
   const { data, error } = await supabase()
     .from("courses")
-    .select("id, name, location, api_id, tees(*)")
+    .select("id, name, location, tees(*)")
     .order("name");
   if (error) throw error;
   return (data as Course[]).map((c) => ({
@@ -161,14 +160,10 @@ export async function deleteTee(id: string) {
   if (error) throw error;
 }
 
-export async function addCourse(course: {
-  name: string;
-  location: string | null;
-  api_id: number | null;
-}): Promise<string> {
+export async function addCourse(name: string): Promise<string> {
   const { data, error } = await supabase()
     .from("courses")
-    .insert(course)
+    .insert({ name })
     .select("id")
     .single();
   if (error) throw error;

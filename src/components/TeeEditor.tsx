@@ -1,11 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import CourseLookup, {
-  teeLabel,
-  type LookupCourse,
-  type LookupTee,
-} from "@/components/CourseLookup";
 import {
   dangerClass,
   inputClass,
@@ -18,7 +13,7 @@ import {
 import { deleteTee, problem, saveTee, type Tee } from "@/lib/data";
 
 // Add or change a set of tees: name, rating and slope, then each hole's par, yards
-// and stroke index. Rating and slope can be filled in from the course database.
+// and stroke index, all from the club's scorecard.
 
 const cellBox =
   "min-h-11 w-full rounded-lg border border-line bg-background px-1 text-center text-base tabular-nums";
@@ -56,32 +51,9 @@ export default function TeeEditor({
       String,
     ),
   );
-  const [lookup, setLookup] = useState(false);
-  const [found, setFound] = useState<LookupCourse | null>(null);
-  const [copyHoles, setCopyHoles] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
   const [sure, setSure] = useState(false);
-
-  const applyTee = (t: LookupTee) => {
-    setRating(t.courseRating?.toString() ?? "");
-    setSlope(t.slope?.toString() ?? "");
-    if (!name.trim()) setName(t.name);
-    const canCopy = t.par.length === par.length;
-    if (copyHoles && canCopy) {
-      setPar(t.par.map(String));
-      setYards(t.yards.map((y) => (y ? String(y) : "")));
-      setSi(t.strokeIndex.map(String));
-    }
-    setNote(
-      `Filled in from ${t.name} (${t.gender})${
-        copyHoles && !canCopy ? ". Holes not copied: different number of holes" : ""
-      }. Check them against your card, then save.`,
-    );
-    setLookup(false);
-    setFound(null);
-  };
 
   const setAt =
     (list: string[], set: (v: string[]) => void, i: number) => (v: string) =>
@@ -177,55 +149,10 @@ export default function TeeEditor({
           </label>
         </div>
 
-        {!lookup ? (
-          <button
-            type="button"
-            onClick={() => setLookup(true)}
-            className={`${secondaryClass} w-full`}
-          >
-            Look up rating and slope
-          </button>
-        ) : (
-          <div className="space-y-2 rounded-lg bg-surface p-3">
-            {!found ? (
-              <CourseLookup initialQuery={courseName} onPick={setFound} />
-            ) : (
-              <>
-                <p className="text-sm font-medium">{found.name}: which tees?</p>
-                <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    checked={copyHoles}
-                    onChange={(e) => setCopyHoles(e.target.checked)}
-                  />
-                  Also copy each hole&apos;s par, yards and stroke index
-                </label>
-                <ul className="overflow-hidden rounded-lg border border-line bg-card">
-                  {found.tees.map((t, i) => (
-                    <li key={i} className="border-b border-line last:border-0">
-                      <button
-                        type="button"
-                        onClick={() => applyTee(t)}
-                        className="min-h-11 w-full px-3 py-2 text-left text-sm active:bg-surface"
-                      >
-                        {teeLabel(t)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => setFound(null)}
-                  className="min-h-11 text-sm text-accent underline"
-                >
-                  Back to results
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        {note && <p className="text-sm text-muted">{note}</p>}
+        <p className="text-sm text-muted">
+          From the club&apos;s scorecard. Rating and slope are also in the My EG
+          app.
+        </p>
 
         <div className="overflow-hidden rounded-lg border border-line">
           <div className="flex gap-2 border-b border-line px-2 py-1.5 text-xs text-muted">

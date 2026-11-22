@@ -1,10 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import CourseLookup, {
-  teeLabel,
-  type LookupCourse,
-} from "@/components/CourseLookup";
 import TeeEditor from "@/components/TeeEditor";
 import {
   cardClass,
@@ -23,7 +19,6 @@ import {
   loadCourses,
   problem,
   renameCourse,
-  saveTee,
   type Course,
   type Tee,
 } from "@/lib/data";
@@ -163,8 +158,7 @@ export default function CoursesPage() {
           onClose={() => setEditing(null)}
           onAdded={(course) => {
             reload();
-            // Added by hand: straight on to its first tees.
-            setEditing(course ? { kind: "tee", course } : null);
+            setEditing({ kind: "tee", course });
           }}
         />
       )}
@@ -235,72 +229,24 @@ function CourseSheet({
   );
 }
 
-// Add a course from the course database (with the tees you pick), or by hand.
+// Add a course by name, then straight on to its first tees.
 function AddCourse({
   onClose,
   onAdded,
 }: {
   onClose: () => void;
-  onAdded: (addedByHand: Course | null) => void;
+  onAdded: (course: Course) => void;
 }) {
-  const [found, setFound] = useState<LookupCourse | null>(null);
-  const [picked, setPicked] = useState<number[]>([]);
-  const [byHand, setByHand] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Tees from the database need all their holes to be usable here.
-  const usable = (found?.tees ?? []).map(
-    (t) =>
-      (t.par.length === 9 || t.par.length === 18) &&
-      t.yards.length === t.par.length,
-  );
-
-  const addFound = async () => {
-    if (!found) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const id = await addCourse({
-        name: found.name,
-        location: found.location,
-        api_id: found.id,
-      });
-      const names = new Set<string>();
-      for (const i of picked) {
-        const t = found.tees[i];
-        // Men's and women's tees can share a colour: keep names unique.
-        let teeName = t.name;
-        if (names.has(teeName)) teeName = `${t.name} (${t.gender})`;
-        names.add(teeName);
-        await saveTee({
-          course_id: id,
-          name: teeName,
-          course_rating: t.courseRating,
-          slope: t.slope,
-          par: t.par,
-          yards: t.yards,
-          stroke_index: t.strokeIndex,
-        });
-      }
-      onAdded(null);
-    } catch (e) {
-      setError(problem(e));
-      setBusy(false);
-    }
-  };
-
-  const addByHand = async (e: React.FormEvent) => {
+  const add = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      const id = await addCourse({
-        name: name.trim(),
-        location: null,
-        api_id: null,
-      });
-      onAdded({ id, name: name.trim(), location: null, api_id: null, tees: [] });
+      const id = await addCourse(name.trim());
+      onAdded({ id, name: name.trim(), location: null, tees: [] });
     } catch (err) {
       setError(problem(err));
       setBusy(false);
@@ -309,106 +255,30 @@ function AddCourse({
 
   return (
     <Sheet title="Add a course" onClose={onClose}>
-      {byHand ? (
-        <form onSubmit={addByHand} className="space-y-3">
-          <label className="block">
-            <span className={labelClass}>Course name</span>
-            <input
-              required
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={inputClass}
-            />
-          </label>
-          <p className="text-sm text-muted">
-            Next you&apos;ll add its tees from the scorecard.
-          </p>
-          <Problem>{error}</Problem>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setByHand(false)}
-              className={secondaryClass}
-            >
-              Back
-            </button>
-            <button type="submit" disabled={busy} className={primaryClass}>
-              Next
-            </button>
-          </div>
-        </form>
-      ) : !found ? (
-        <div className="space-y-3">
-          <CourseLookup
-            onPick={(c) => {
-              setFound(c);
-              setPicked([]);
-            }}
+      <form onSubmit={add} className="space-y-3">
+        <label className="block">
+          <span className={labelClass}>Course name</span>
+          <input
+            required
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={inputClass}
           />
-          <button
-            type="button"
-            onClick={() => setByHand(true)}
-            className="min-h-11 text-sm font-medium text-accent underline"
-          >
-            Not listed? Add it by hand
+        </label>
+        <p className="text-sm text-muted">
+          Next you&apos;ll add its tees from the scorecard.
+        </p>
+        <Problem>{error}</Problem>
+        <div className="flex gap-2">
+          <button type="button" onClick={onClose} className={secondaryClass}>
+            Cancel
+          </button>
+          <button type="submit" disabled={busy} className={primaryClass}>
+            Next
           </button>
         </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="font-medium">{found.name}</p>
-          <p className="text-sm text-muted">Which tees do you play?</p>
-          <ul className="overflow-hidden rounded-lg border border-line">
-            {found.tees.map((t, i) => (
-              <li key={i} className="border-b border-line last:border-0">
-                <label
-                  className={`flex min-h-12 items-center gap-3 px-3 py-2 text-sm ${
-                    usable[i] ? "" : "opacity-50"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    disabled={!usable[i]}
-                    checked={picked.includes(i)}
-                    onChange={(e) =>
-                      setPicked((p) =>
-                        e.target.checked ? [...p, i] : p.filter((x) => x !== i),
-                      )
-                    }
-                  />
-                  <span>
-                    {teeLabel(t)}
-                    {!usable[i] && " · no hole details"}
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-muted">
-            Check the pars, yards and stroke indexes against your card after
-            adding.
-          </p>
-          <Problem>{error}</Problem>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setFound(null)}
-              className={secondaryClass}
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={addFound}
-              disabled={busy || picked.length === 0}
-              className={primaryClass}
-            >
-              {busy ? "Adding…" : "Add course"}
-            </button>
-          </div>
-        </div>
-      )}
+      </form>
     </Sheet>
   );
 }
