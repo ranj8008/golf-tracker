@@ -1,7 +1,7 @@
 // Records for the Honours board, all worked out from the rounds. Ties go to the
 // earliest round, with a count of the others that share it.
 
-import type { RoundStats } from "./stats.ts";
+import { brokeEighty, type RoundStats } from "./stats.ts";
 
 export type Honour = {
   label: string;
@@ -138,6 +138,13 @@ export function highlights(rounds: RoundStats[]): Highlight[] {
     .sort((a, b) => b.stats.round.played_on.localeCompare(a.stats.round.played_on));
 }
 
+// Every round of 79 or better, newest first.
+export function subEighty(rounds: RoundStats[]): RoundStats[] {
+  return rounds
+    .filter(brokeEighty)
+    .sort((a, b) => b.round.played_on.localeCompare(a.round.played_on));
+}
+
 export type GroupRow = {
   key: string; // year, or course id
   label: string;
@@ -146,6 +153,7 @@ export type GroupRow = {
   bestPoints: RoundStats | null;
   avgGross: number | null;
   lowestDifferential: number | null;
+  brokeEighty: number; // rounds of 79 or better
 };
 
 function group(key: string, label: string, rs: RoundStats[]): GroupRow {
@@ -161,6 +169,7 @@ function group(key: string, label: string, rs: RoundStats[]): GroupRow {
       ? withGross.reduce((s, r) => s + r.gross!, 0) / withGross.length
       : null,
     lowestDifferential: diffs.length ? Math.min(...diffs) : null,
+    brokeEighty: rs.filter(brokeEighty).length,
   };
 }
 

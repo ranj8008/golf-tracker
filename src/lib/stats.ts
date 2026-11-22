@@ -27,6 +27,9 @@ const teeHoles = (t: Round["tee"]) => ({
   strokeIndex: t.stroke_index,
 });
 
+// Breaking 80: a gross of 79 or better.
+export const brokeEighty = (r: RoundStats) => r.gross !== null && r.gross <= 79;
+
 const avg = (xs: number[]) =>
   xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
 
@@ -129,6 +132,8 @@ export type Summary = {
   avgPoints: number | null;
   bestGross: RoundStats | null;
   bestPoints: RoundStats | null;
+  brokeEighty: number; // rounds of 79 or better
+  completeRounds: number; // rounds with a gross (every hole scored)
   mix: { eagles: number; birdies: number; pars: number; bogeys: number; doubles: number }; // per round
   byPar: { par: number; avg: number; holes: number }[];
   statsRounds: number;
@@ -164,6 +169,8 @@ export function summarise(rounds: RoundStats[]): Summary {
     avgPoints: avg(rounds.map((r) => r.points)),
     bestGross: complete.reduce<RoundStats | null>(
       (b, r) => (!b || r.gross! < b.gross! ? r : b), null),
+    brokeEighty: rounds.filter(brokeEighty).length,
+    completeRounds: complete.length,
     bestPoints: rounds.reduce<RoundStats | null>(
       (b, r) => (!b || r.points > b.points ? r : b), null),
     mix: {

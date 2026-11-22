@@ -145,6 +145,15 @@ export default function StatsPage() {
                 note={s.bestPoints && shortDate(s.bestPoints.round.played_on)}
                 href={s.bestPoints ? `/rounds/${s.bestPoints.round.id}` : undefined}
               />
+              <Tile
+                label="Broke 80"
+                value={s.brokeEighty}
+                note={
+                  s.completeRounds
+                    ? `${Math.round((s.brokeEighty / s.completeRounds) * 100)}% of rounds`
+                    : undefined
+                }
+              />
             </div>
           </Section>
 
