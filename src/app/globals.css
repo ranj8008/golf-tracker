@@ -24,6 +24,10 @@
   --on-bogey: #ffffff;
   --double: #1a3a8c;
   --on-double: #ffffff;
+  /* Stats charts */
+  --chart-muted: #aab4c3;
+  --mix-eagle: #8e1620;
+  --mix-par: #aab4c3;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,6 +52,9 @@
     --on-bogey: #ffffff;
     --double: #2c55b8;
     --on-double: #ffffff;
+    --chart-muted: #5b6576;
+    --mix-eagle: #ff8a8a;
+    --mix-par: #5b6576;
   }
 }
 

@@ -38,6 +38,8 @@ export type Round = {
   handicap_index: number | null;
   playing_handicap: number;
   notes: string | null;
+  pcc: number;
+  created_at: string;
   course: { name: string };
   tee: Tee;
   hole_scores: HoleRow[];
