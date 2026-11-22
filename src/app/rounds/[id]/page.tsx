@@ -160,6 +160,9 @@ function RoundView() {
     round.playing_handicap,
   );
   const t = card.total;
+  // Rounds with no putts recorded (e.g. imported ones without stats) show scores
+  // only: no putts, fairways, greens, scrambling or penalties.
+  const scoresOnly = round.hole_scores.every((h) => h.putts === null);
 
   return (
     <main
@@ -192,7 +195,9 @@ function RoundView() {
       </p>
       {stepper}
 
-      <div className="mb-2 grid grid-cols-4 gap-2">
+      <div
+        className={`mb-2 grid gap-2 ${scoresOnly ? "grid-cols-3" : "grid-cols-4"}`}
+      >
         <Tile
           label="Gross"
           value={t.gross ?? "–"}
@@ -204,8 +209,9 @@ function RoundView() {
           note={t.net !== null ? formatToPar(t.net - t.par) : undefined}
         />
         <Tile label="Points" value={t.points} note="Stableford" />
-        <Tile label="Putts" value={t.putts || "–"} />
+        {!scoresOnly && <Tile label="Putts" value={t.putts || "–"} />}
       </div>
+      {!scoresOnly && (
       <div className="mb-2 grid grid-cols-4 gap-2">
         <Tile
           label="Fairways"
@@ -224,6 +230,7 @@ function RoundView() {
         />
         <Tile label="Penalties" value={t.penalties} />
       </div>
+      )}
       <div className="mb-4 grid grid-cols-5 gap-2 text-center">
         {[
           ["Eagles", t.eagles],
@@ -241,9 +248,11 @@ function RoundView() {
 
       <Scorecard rows={card.rows} out={card.out} inn={card.in} total={t} />
 
-      <p className="mt-3 text-xs text-muted">
-        {t.onePutts} one-putts · {t.threePutts} three-putts
-      </p>
+      {!scoresOnly && (
+        <p className="mt-3 text-xs text-muted">
+          {t.onePutts} one-putts · {t.threePutts} three-putts
+        </p>
+      )}
       {round.notes && (
         <p className={`${cardClass} mt-4 p-3 text-sm whitespace-pre-wrap`}>
           {round.notes}
