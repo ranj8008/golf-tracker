@@ -8,15 +8,17 @@ import { useAuth } from "@/components/Editing";
 const icons: Record<string, React.ReactNode> = {
   home: <path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" />,
   add: <path d="M12 5v14M5 12h14" />,
+  rounds: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   courses: <path d="M7 21V3l10 4-10 4M4 21h12" />,
   flag: <path d="M7 21V3l10 4-10 4" />,
 };
 
 type Page = { href: string; label: string; icon: string };
 
-// Phase 1 pages. Rounds, Stats and Honours join these as they're built.
+// Stats and Honours join these as they're built.
 const main: Page[] = [
   { href: "/", label: "Home", icon: "home" },
+  { href: "/rounds", label: "Rounds", icon: "rounds" },
   { href: "/rounds/new", label: "Add round", icon: "add" },
   { href: "/courses", label: "Courses", icon: "courses" },
 ];
@@ -44,8 +46,13 @@ function Icon({ name, active }: { name: string; active?: boolean }) {
 export default function Nav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  // Rounds covers a round's own pages, but not Add round (/rounds/new).
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+    href === "/"
+      ? pathname === "/"
+      : href === "/rounds"
+        ? pathname.startsWith("/rounds") && !pathname.startsWith("/rounds/new")
+        : pathname.startsWith(href);
 
   return (
     <>

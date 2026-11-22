@@ -135,3 +135,22 @@ input[type="date"]::-webkit-date-and-time-value {
     animation: none !important;
   }
 }
+
+/* A round's page sliding in after swiping or tapping older / newer. */
+@keyframes slide-from-right {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+@keyframes slide-from-left {
+  from {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[slide-from"] {
+    animation: none !important;
+  }
+}

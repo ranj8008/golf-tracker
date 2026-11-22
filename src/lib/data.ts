@@ -112,6 +112,20 @@ export async function loadRounds(limit?: number): Promise<Round[]> {
   return (data as Round[]).map(fixRound);
 }
 
+// Every round, kept for the session so moving between rounds is instant. Cleared
+// whenever a round is saved or deleted.
+let allRounds: Promise<Round[]> | null = null;
+export function loadAllRounds(): Promise<Round[]> {
+  allRounds ??= loadRounds().catch((e) => {
+    allRounds = null;
+    throw e;
+  });
+  return allRounds;
+}
+export const forgetRounds = () => {
+  allRounds = null;
+};
+
 export type RoundInput = {
   id?: string;
   course_id: string;
@@ -132,12 +146,14 @@ export async function saveRound(
     p_round: round,
     p_holes: holes.map((h, i) => ({ hole: i + 1, ...h })),
   });
+  forgetRounds();
   if (error) throw error;
   return data as string;
 }
 
 export async function deleteRound(id: string) {
   const { error } = await supabase().from("rounds").delete().eq("id", id);
+  forgetRounds();
   if (error) throw error;
 }
 
