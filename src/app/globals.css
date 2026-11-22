@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* Same structure as Shankaholics, with blue as the main colour. Light and dark follow
+   the phone's setting. */
+:root {
+  --background: #f3f5f9;
+  --foreground: #141a24;
+  --card: #ffffff;
+  --surface: #e4e9f1;
+  --line: #dfe4ec;
+  --muted: #5a6577;
+  --accent: #1d4fc4; /* 4.5:1+ on the grey surface for small text */
+  --on-accent: #ffffff;
+  --accent-soft: #dbe6fb;
+  --on-accent-soft: #123579;
+  --up: #1f7a45; /* ticks: fairway hit, green in regulation */
+  --down: #c0392b; /* crosses and errors */
+  --under: #b4561b; /* birdie rings: under par stands out from the blue */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e121a;
+    --foreground: #e7ecf4;
+    --card: #161c27;
+    --surface: #212937;
+    --line: #262f3e;
+    --muted: #94a0b4;
+    --accent: #6ea0ff;
+    --on-accent: #0e121a;
+    --accent-soft: #1f3460;
+    --on-accent-soft: #d6e3ff;
+    --up: #4cc27a;
+    --down: #f0736a;
+    --under: #f09a5f;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent-soft: var(--on-accent-soft);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-under: var(--under);
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Room below the page for the phone tab bar (Nav.tsx): its 56px plus the iPhone
+   home indicator. Wider screens have the links at the top instead. */
+@media (max-width: 767.98px) {
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Number boxes: no spinner arrows. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

@@ -1,0 +1,53 @@
+name: Set up Supabase
+
+# Runs supabase/setup.sql against the golf tracker database, for when pasting it into
+# Supabase's SQL editor isn't practical (e.g. on a phone). Safe to run again: the
+# script only creates what's missing and resets its own rules.
+#
+# Needs the repository secret SUPABASE_DB_URL: in Supabase, Connect -> Session pooler
+# connection string (postgresql://postgres.<project>:<password>@...pooler.supabase.com:5432/postgres),
+# with the database password filled in. Run it from the Actions tab.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run setup.sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Add the SUPABASE_DB_URL secret first (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          # Check the format before connecting: database tools quote a malformed
+          # connection string back in their errors, which would print the password.
+          case "$SUPABASE_DB_URL" in
+            *"["*|*"]"*|*" "*)
+              echo "::error::SUPABASE_DB_URL has square brackets or spaces. Replace [YOUR-PASSWORD], brackets included, with just the password."
+              exit 1 ;;
+          esac
+          case "$SUPABASE_DB_URL" in
+            postgresql://*@*pooler.supabase.com:5432/postgres*) ;;
+            *)
+              echo "::error::SUPABASE_DB_URL isn't a Session pooler connection string (postgresql://postgres.<project>:<password>@...pooler.supabase.com:5432/postgres)."
+              exit 1 ;;
+          esac
+          # Connection errors are hidden (they can echo the connection string); the
+          # script's own errors still show.
+          psql "$SUPABASE_DB_URL" -c "select 1" >/dev/null 2>&1 || {
+            echo "::error::Couldn't connect to the database. Check the password in SUPABASE_DB_URL and that it's the Session pooler string."
+            exit 1
+          }
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/setup.sql
+          # Supabase's API notices new tables on its own; this makes it immediate.
+          psql "$SUPABASE_DB_URL" -c "notify pgrst, 'reload schema';"
+          echo "Done. Tables, rules and the Lambourne Orange tees are in place."
