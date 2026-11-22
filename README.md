@@ -1,4 +1,4 @@
-# Golf tracker
+# Ranj's Golf
 
 A private golf score tracker: courses and tees, rounds entered after playing, and
 each round shown as a scorecard. Next.js on Vercel, data in Supabase. Built for

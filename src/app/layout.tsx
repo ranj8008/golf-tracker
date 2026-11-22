@@ -10,9 +10,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Golf tracker",
+  title: "Ranj's Golf",
   description: "My golf rounds, scorecards and stats",
-  appleWebApp: { title: "Golf", capable: true },
+  appleWebApp: { title: "Ranj's Golf", capable: true },
   // Private: keep it out of search engines.
   robots: { index: false, follow: false },
 };

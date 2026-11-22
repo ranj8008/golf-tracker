@@ -67,7 +67,7 @@ export default function Nav() {
           <span className="flex size-9 items-center justify-center rounded-full bg-accent text-on-accent">
             <Icon name="flag" active />
           </span>
-          Golf tracker
+          Ranj&apos;s Golf
         </Link>
 
         {user && (

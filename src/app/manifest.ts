@@ -4,8 +4,8 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Golf tracker",
-    short_name: "Golf",
+    name: "Ranj's Golf",
+    short_name: "Ranj's Golf",
     description: "My golf rounds, scorecards and stats",
     start_url: "/",
     display: "standalone",
