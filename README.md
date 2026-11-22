@@ -39,8 +39,8 @@ yours is the only login.
    Connect → **Session pooler** connection string, with your database password in
    place of `[YOUR-PASSWORD]` (no brackets). Then Actions → **Set up Supabase** →
    Run workflow. It creates the tables and rules, and adds Lambourne Golf Club's
-   Orange tees to your login. Run it again whenever `setup.sql` changes; it's safe
-   to re-run.
+   Orange tees to your login. After that it runs by itself whenever `setup.sql`
+   changes; it's safe to re-run.
 3. **Vercel**: import this repo, and add these environment variables before
    deploying:
    - `NEXT_PUBLIC_SUPABASE_URL`: Supabase → Project Settings → API → Project URL

@@ -6,9 +6,21 @@ name: Set up Supabase
 #
 # Needs the repository secret SUPABASE_DB_URL: in Supabase, Connect -> Session pooler
 # connection string (postgresql://postgres.<project>:<password>@...pooler.supabase.com:5432/postgres),
-# with the database password filled in. Run it from the Actions tab.
+# with the database password filled in.
+#
+# Runs by itself whenever setup.sql (or this file) is pushed, and can also be run by
+# hand from the Actions tab.
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - supabase/setup.sql
+      - .github/workflows/supabase-setup.yml
+
+# One run at a time, so two quick pushes can't run the script over each other.
+concurrency:
+  group: supabase-setup
+  cancel-in-progress: false
 
 permissions:
   contents: read
