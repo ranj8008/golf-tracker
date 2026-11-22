@@ -16,12 +16,12 @@
   --up: #1f7a45; /* ticks: fairway hit, green in regulation */
   --down: #c0392b; /* crosses and errors */
   --under: #b4561b; /* birdie rings: under par stands out from the blue */
-  /* Score marks while entering a round */
-  --eagle: #e0a100;
-  --on-eagle: #2b1d00;
-  --birdie-soft: #fbe3d3;
-  --bogey-soft: #dbe6fb;
-  --double: #1d4fc4;
+  /* Score marks (src/lib/marks.ts) */
+  --birdie: #d92b36;
+  --on-birdie: #ffffff;
+  --bogey: #4a90e2;
+  --on-bogey: #ffffff;
+  --double: #1a3a8c;
   --on-double: #ffffff;
 }
 
@@ -40,12 +40,12 @@
     --up: #4cc27a;
     --down: #f0736a;
     --under: #f09a5f;
-    --eagle: #f4c430;
-    --on-eagle: #2b1d00;
-    --birdie-soft: #4a2a17;
-    --bogey-soft: #1f3460;
-    --double: #6ea0ff;
-    --on-double: #0e121a;
+    --birdie: #e5404b;
+    --on-birdie: #ffffff;
+    --bogey: #4a90e2;
+    --on-bogey: #ffffff;
+    --double: #2c55b8;
+    --on-double: #ffffff;
   }
 }
 
@@ -63,10 +63,10 @@
   --color-up: var(--up);
   --color-down: var(--down);
   --color-under: var(--under);
-  --color-eagle: var(--eagle);
-  --color-on-eagle: var(--on-eagle);
-  --color-birdie-soft: var(--birdie-soft);
-  --color-bogey-soft: var(--bogey-soft);
+  --color-birdie: var(--birdie);
+  --color-on-birdie: var(--on-birdie);
+  --color-bogey: var(--bogey);
+  --color-on-bogey: var(--on-bogey);
   --color-double: var(--double);
   --color-on-double: var(--on-double);
   --font-sans: var(--font-geist-sans);

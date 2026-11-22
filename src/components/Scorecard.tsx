@@ -1,4 +1,5 @@
 import { pct, type HoleResult, type Totals } from "@/lib/golf";
+import { markClass } from "@/lib/marks";
 
 // The round as a scorecard: one row per hole, Out / In / Total, everything after
 // Score worked out from what was entered.
@@ -6,20 +7,9 @@ import { pct, type HoleResult, type Totals } from "@/lib/golf";
 // Score shapes, as on a club card: rings under par, boxes over.
 function ScoreMark({ r }: { r: HoleResult }) {
   if (r.score === null) return <span className="text-muted">–</span>;
-  const d = r.toPar!;
-  const shape =
-    d <= -2
-      ? "rounded-full border-2 border-under outline-2 outline-offset-1 outline-under"
-      : d === -1
-        ? "rounded-full border-2 border-under"
-        : d === 1
-          ? "border border-foreground/70"
-          : d >= 2
-            ? "border border-foreground/70 outline outline-offset-1 outline-foreground/70"
-            : "";
   return (
     <span
-      className={`inline-flex size-7 items-center justify-center font-semibold ${shape}`}
+      className={`inline-flex size-7 items-center justify-center font-semibold ${markClass(r.toPar)}`}
     >
       {r.score}
     </span>
@@ -170,18 +160,21 @@ export default function Scorecard({
         </tbody>
       </table>
       <p className="flex flex-wrap gap-x-3 gap-y-1 border-t border-line px-3 py-2 text-xs text-muted">
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-3 rounded-full border-2 border-under" />
-          Birdie
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-3 border border-foreground/70" />
-          Bogey
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-3 border border-foreground/70 outline outline-offset-1 outline-foreground/70" />
-          Double bogey +
-        </span>
+        {[
+          ["Eagle or better", -2],
+          ["Birdie", -1],
+          ["Bogey", 1],
+          ["Double bogey +", 2],
+        ].map(([label, d]) => (
+          <span key={label} className="flex items-center gap-1.5">
+            <span
+              className={`inline-block size-3 ${markClass(d as number)} ${
+                (d as number) <= -2 ? "ring-1 ring-offset-1" : ""
+              }`}
+            />
+            {label}
+          </span>
+        ))}
         <span>• Handicap stroke</span>
       </p>
     </div>

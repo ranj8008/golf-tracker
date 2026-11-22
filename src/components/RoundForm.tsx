@@ -366,15 +366,13 @@ export default function RoundForm({ round }: { round?: Round }) {
               key={`${flash.hole}-${flash.name}`}
               role="status"
               className={`animate-[flash_2.5s_ease-out] rounded-full px-3 py-1.5 text-sm font-bold whitespace-nowrap ${
-                flash.toPar <= -2
-                  ? "bg-eagle text-on-eagle"
-                  : flash.toPar === -1
-                    ? "bg-birdie-soft text-under"
-                    : flash.toPar === 0
-                      ? "bg-surface text-foreground"
-                      : flash.toPar === 1
-                        ? "bg-bogey-soft text-foreground"
-                        : "bg-double text-on-double"
+                flash.toPar <= -1
+                  ? "bg-birdie text-on-birdie"
+                  : flash.toPar === 0
+                    ? "bg-surface text-foreground"
+                    : flash.toPar === 1
+                      ? "bg-bogey text-on-bogey"
+                      : "bg-double text-on-double"
               }`}
             >
               {flash.name} on {flash.hole}

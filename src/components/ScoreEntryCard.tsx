@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { markClass } from "@/lib/marks";
 import {
   autoGir,
   pct,
@@ -48,9 +49,8 @@ function NumberCell({
   );
 }
 
-// The score box takes the scorecard mark for the result, with a quick pop when
-// it changes: double ring for eagle or better, ring for birdie, box for bogey,
-// double box for double bogey or worse.
+// The score box takes the scorecard mark for the result (src/lib/marks.ts), with
+// a quick pop when it changes.
 export function resultName(score: number, par: number) {
   const d = score - par;
   if (score === 1) return "Hole in one";
@@ -61,18 +61,11 @@ export function resultName(score: number, par: number) {
   );
 }
 
+// Marked scores fill the box; an empty box or a par keeps the plain input look.
 const resultStyle = (d: number | null) =>
-  d === null
-    ? "rounded-md border-line bg-background"
-    : d <= -2
-      ? "rounded-full border-eagle bg-eagle font-bold text-on-eagle outline-2 outline-offset-2 outline-eagle"
-      : d === -1
-        ? "rounded-full border-2 border-under bg-birdie-soft font-bold text-under"
-        : d === 0
-          ? "rounded-md border-line bg-background font-semibold"
-          : d === 1
-            ? "rounded-none border-2 border-double/70 bg-bogey-soft font-semibold"
-            : "rounded-none border-double bg-double font-semibold text-on-double outline-2 outline-offset-2 outline-double";
+  d === null || d === 0
+    ? `rounded-md border-line bg-background ${d === 0 ? "font-semibold" : ""}`
+    : `border-transparent ${markClass(d)}`;
 
 function ScoreCell({
   value,
