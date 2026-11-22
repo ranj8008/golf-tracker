@@ -1,19 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-// The publishable key is meant to be public: it can only do what the database's
-// row-level security allows (see supabase/setup.sql), which is nothing until you're
-// signed in, and then only your own rows.
-//
-// Also accepts the names Vercel's Supabase integration and Supabase's own guides use.
-// Each name is written out in full: Next.js only builds in variables named literally.
-export const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
-export const SUPABASE_KEY = (
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  ""
-).trim();
+// The golf tracker's Supabase project. The publishable key is meant to be public:
+// it can only do what the database's row-level security allows (see
+// supabase/setup.sql), which is nothing until you're signed in, and then only your
+// own rows. Never put the secret or service_role key here.
+export const SUPABASE_URL = "https://jwpjpijarnitlbtzthxm.supabase.co";
+export const SUPABASE_KEY = "sb_publishable_aQmhuR9SWBb1cDLXnOX3gg_0zD43asn";
 export const configured = !!SUPABASE_URL && !!SUPABASE_KEY;
 
 let client: SupabaseClient | null = null;

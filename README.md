@@ -41,17 +41,13 @@ yours is the only login.
    Run workflow. It creates the tables and rules, and adds Lambourne Golf Club's
    Orange tees to your login. After that it runs by itself whenever `setup.sql`
    changes; it's safe to re-run.
-3. **Vercel**: import this repo, and add these environment variables before
-   deploying:
-   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase → Project Settings → API → Project URL
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: the publishable key on the same page
-
-   If you add or change a variable later, redeploy for it to take effect.
+3. **Vercel**: import this repo and deploy. No settings are needed: the Supabase
+   project URL and publishable key are in `src/lib/supabase.ts` (both are meant
+   to be public).
 
 ## Running it locally
 
-`npm install`, copy `.env.example` to `.env.local` and fill it in, then
-`npm run dev`.
+`npm install`, then `npm run dev`.
 
 ## Adding a course
 
