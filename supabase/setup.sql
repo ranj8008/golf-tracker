@@ -193,7 +193,7 @@ $$;
 revoke all on function public.save_round(jsonb, jsonb) from public, anon;
 grant execute on function public.save_round(jsonb, jsonb) to authenticated;
 
--- Starting course: Lambourne Golf Club's Orange and Blue tees (from the club
+-- Starting course: Lambourne Golf Club's five sets of tees (from the club
 -- scorecard and course records), for every login. Adds what's missing; on tees you
 -- already have, only fills in a rating or slope that's blank, so your own edits stay.
 -- Create your login before running this; if you ran it first, just run it again.
@@ -216,7 +216,13 @@ begin
         ('Orange', 72.5, 129,
           array[406,489,400,507,185,440,147,448,316, 384,425,516,169,517,363,339,138,386]),
         ('Blue', 73.4, 135,
-          array[422,492,417,518,196,448,158,446,326, 400,438,530,181,542,374,350,148,412])
+          array[422,492,417,518,196,448,158,446,326, 400,438,530,181,542,374,350,148,412]),
+        ('Black', 73.7, 134,
+          array[413,514,417,519,194,451,157,457,324, 401,438,543,181,542,373,348,150,412]),
+        ('White', 72.2, 130,
+          array[412,481,397,506,186,435,146,433,317, 381,425,519,165,518,364,342,132,381]),
+        ('Royal Blue', 70.2, 124,
+          array[381,480,374,488,147,388,135,419,281, 379,379,472,156,504,310,303,129,335])
       ) as v(name, rating, slope, yards)
     loop
       insert into public.tees
