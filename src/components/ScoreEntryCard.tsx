@@ -15,8 +15,10 @@ import {
 // rows are worked out as you go. GIR fills in from score and putts; tap it to change
 // it (e.g. putting from the fringe).
 
-const box =
-  "h-11 w-full rounded-md border border-line bg-background px-0 text-center text-base tabular-nums";
+// Soft, borderless number boxes that ring in blue while you type in them.
+const field =
+  "bg-surface/70 outline-none transition focus:bg-card focus:ring-2 focus:ring-accent";
+const box = `h-11 w-full rounded-lg px-0 text-center text-base font-medium tabular-nums ${field}`;
 
 function NumberCell({
   value,
@@ -44,7 +46,7 @@ function NumberCell({
         onChange(digits === "" ? null : Number(digits));
       }}
       onFocus={(e) => e.target.select()}
-      className={`${box} ${invalid ? "border-down text-down" : ""}`}
+      className={`${box} ${invalid ? "text-down ring-2 ring-down" : ""}`}
     />
   );
 }
@@ -56,16 +58,22 @@ export function resultName(score: number, par: number) {
   if (score === 1) return "Hole in one";
   if (d <= -3) return "Albatross";
   return (
-    { [-2]: "Eagle", [-1]: "Birdie", 0: "Par", 1: "Bogey", 2: "Double bogey", 3: "Triple bogey" }[d] ??
-    `+${d}`
+    {
+      [-2]: "Eagle",
+      [-1]: "Birdie",
+      0: "Par",
+      1: "Bogey",
+      2: "Double bogey",
+      3: "Triple bogey",
+    }[d] ?? `+${d}`
   );
 }
 
 // Marked scores fill the box; an empty box or a par keeps the plain input look.
 const resultStyle = (d: number | null) =>
   d === null || d === 0
-    ? `rounded-md border-line bg-background ${d === 0 ? "font-semibold" : ""}`
-    : `border-transparent ${markClass(d)}`;
+    ? `rounded-lg ${field} ${d === 0 ? "font-semibold" : "font-medium"}`
+    : `outline-none focus:ring-offset-2 focus:ring-offset-card ${markClass(d)} focus:ring-accent`;
 
 function ScoreCell({
   value,
@@ -112,21 +120,52 @@ function ScoreCell({
         onChange(digits === "" ? null : Number(digits));
       }}
       onFocus={(e) => e.target.select()}
-      className={`mx-auto block size-11 border px-0 text-center text-base tabular-nums transition-colors ${resultStyle(toPar)}`}
+      className={`mx-auto block size-11 px-0 text-center text-base tabular-nums transition-colors ${resultStyle(toPar)}`}
     />
   );
 }
 
+const Check = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="size-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={3.2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </svg>
+);
+const Cross = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="size-3.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={3.2}
+    strokeLinecap="round"
+    aria-hidden
+  >
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+// Worked-out ticks and crosses (Scr): small, no circle.
 function Mark({ v }: { v: boolean | null }) {
-  if (v === null) return <span className="text-muted">–</span>;
-  return v ? (
-    <span className="text-lg font-bold text-up">✓</span>
-  ) : (
-    <span className="text-lg font-bold text-down">✗</span>
+  if (v === null) return null;
+  return (
+    <span className={`inline-flex ${v ? "text-up" : "text-down"}`}>
+      {v ? <Check /> : <Cross />}
+    </span>
   );
 }
 
-// A tap target that shows ✓ / ✗ / –.
+// FIR and GIR: a round toggle in a full-size tap target. Empty ring: not entered.
+// Filled: entered (green tick, soft red cross). Outlined: GIR worked out from score
+// and putts, not yet tapped.
 function ToggleCell({
   value,
   label,
@@ -136,16 +175,30 @@ function ToggleCell({
   value: boolean | null;
   label: string;
   onTap: () => void;
-  set: boolean; // entered (rather than blank or worked out)
+  set: boolean;
 }) {
+  const look =
+    value === null
+      ? "border-2 border-line"
+      : set
+        ? value
+          ? "bg-up text-on-up"
+          : "bg-down/15 text-down"
+        : value
+          ? "border-2 border-up text-up"
+          : "border-2 border-down/50 text-down";
   return (
     <button
       type="button"
-      aria-label={`${label}: ${value === null ? "not entered" : value ? "yes" : "no"}`}
+      aria-label={`${label}: ${value === null ? "not entered" : value ? "yes" : "no"}${set || value === null ? "" : " (worked out)"}`}
       onClick={onTap}
-      className={`${box} flex items-center justify-center ${set ? "" : "border-dashed"}`}
+      className="group flex h-11 w-full items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      <Mark v={value} />
+      <span
+        className={`flex size-8 items-center justify-center rounded-full transition group-active:scale-90 ${look}`}
+      >
+        {value !== null && (value ? <Check /> : <Cross />)}
+      </span>
     </button>
   );
 }
@@ -220,7 +273,10 @@ export default function ScoreEntryCard({
     const i = r.hole - 1;
     const e = entries[i];
     return (
-      <tr key={r.hole} className="border-b border-line">
+      <tr
+        key={r.hole}
+        className="border-b border-line transition-colors focus-within:bg-accent/5"
+      >
         <th scope="row" className={`${td} pl-1.5 text-left font-semibold`}>
           {r.hole}
         </th>
@@ -279,9 +335,7 @@ export default function ScoreEntryCard({
             onChange={(v) => setHole(i, { penalties: v })}
           />
         </td>
-        <td className={td}>
-          {r.scramble !== null && <Mark v={r.scramble} />}
-        </td>
+        <td className={td}>{r.scramble !== null && <Mark v={r.scramble} />}</td>
         <td className={`${td} font-semibold`}>
           {r.score === null ? "" : r.points}
         </td>
@@ -371,7 +425,7 @@ export default function ScoreEntryCard({
         </tbody>
       </table>
       <p className="border-t border-line px-3 py-2 text-xs text-muted">
-        GIR fills in from score and putts (dashed box): tap to change it. •
+        GIR fills in from score and putts (outlined): tap to change it. •
         Handicap stroke.
       </p>
     </div>
