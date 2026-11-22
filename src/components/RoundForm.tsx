@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ScoreEntryCard from "@/components/ScoreEntryCard";
+import ScoreEntryCard, { resultName } from "@/components/ScoreEntryCard";
 import {
   cardClass,
   Dropdown,
@@ -106,6 +106,12 @@ export default function RoundForm({ round }: { round?: Round }) {
   const [error, setError] = useState<string | null>(null);
   const [confirmMissing, setConfirmMissing] = useState(false);
   const loaded = useRef(false);
+  const [flash, setFlash] = useState<{
+    hole: number;
+    toPar: number;
+    name: string;
+  } | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Courses, and for a new round: a saved draft, or else last round's course, tees
   // and handicaps.
@@ -172,6 +178,19 @@ export default function RoundForm({ round }: { round?: Round }) {
   const setHole = (i: number, patch: Partial<HoleEntry>) => {
     setEntries((es) => es.map((e, j) => (j === i ? { ...e, ...patch } : e)));
     setConfirmMissing(false);
+    // A score typed in: say what it was, briefly, in the bar at the bottom.
+    if ("score" in patch && tee) {
+      clearTimeout(flashTimer.current);
+      if (patch.score) {
+        const par = tee.par[i];
+        setFlash({
+          hole: i + 1,
+          toPar: patch.score - par,
+          name: resultName(patch.score, par),
+        });
+        flashTimer.current = setTimeout(() => setFlash(null), 2500);
+      } else setFlash(null);
+    }
   };
 
   const badPutts = entries
@@ -247,7 +266,7 @@ export default function RoundForm({ round }: { round?: Round }) {
 
   return (
     <form onSubmit={save} className="space-y-4">
-      <div className={`${cardClass} grid grid-cols-2 gap-3 p-3`}>
+      <div className={`${cardClass} grid grid-cols-2 gap-3 p-3 [&>*]:min-w-0`}>
         <div className="col-span-2">
           <Dropdown
             label="Course"
@@ -342,7 +361,26 @@ export default function RoundForm({ round }: { round?: Round }) {
           </p>
         )}
         <div className="flex items-center gap-3">
-          {card && (
+          {flash ? (
+            <span
+              key={`${flash.hole}-${flash.name}`}
+              role="status"
+              className={`animate-[flash_2.5s_ease-out] rounded-full px-3 py-1.5 text-sm font-bold whitespace-nowrap ${
+                flash.toPar <= -2
+                  ? "bg-eagle text-on-eagle"
+                  : flash.toPar === -1
+                    ? "bg-birdie-soft text-under"
+                    : flash.toPar === 0
+                      ? "bg-surface text-foreground"
+                      : flash.toPar === 1
+                        ? "bg-bogey-soft text-foreground"
+                        : "bg-double text-on-double"
+              }`}
+            >
+              {flash.name} on {flash.hole}
+              {flash.toPar <= -1 ? "!" : ""}
+            </span>
+          ) : card && (
             <span className="text-sm text-muted tabular-nums">
               <strong className="text-foreground">
                 {card.total.grossSoFar || "–"}

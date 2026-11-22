@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   autoGir,
   pct,
@@ -43,6 +44,82 @@ function NumberCell({
       }}
       onFocus={(e) => e.target.select()}
       className={`${box} ${invalid ? "border-down text-down" : ""}`}
+    />
+  );
+}
+
+// The score box takes the scorecard mark for the result, with a quick pop when
+// it changes: double ring for eagle or better, ring for birdie, box for bogey,
+// double box for double bogey or worse.
+export function resultName(score: number, par: number) {
+  const d = score - par;
+  if (score === 1) return "Hole in one";
+  if (d <= -3) return "Albatross";
+  return (
+    { [-2]: "Eagle", [-1]: "Birdie", 0: "Par", 1: "Bogey", 2: "Double bogey", 3: "Triple bogey" }[d] ??
+    `+${d}`
+  );
+}
+
+const resultStyle = (d: number | null) =>
+  d === null
+    ? "rounded-md border-line bg-background"
+    : d <= -2
+      ? "rounded-full border-eagle bg-eagle font-bold text-on-eagle outline-2 outline-offset-2 outline-eagle"
+      : d === -1
+        ? "rounded-full border-2 border-under bg-birdie-soft font-bold text-under"
+        : d === 0
+          ? "rounded-md border-line bg-background font-semibold"
+          : d === 1
+            ? "rounded-none border-2 border-double/70 bg-bogey-soft font-semibold"
+            : "rounded-none border-double bg-double font-semibold text-on-double outline-2 outline-offset-2 outline-double";
+
+function ScoreCell({
+  value,
+  toPar,
+  onChange,
+  label,
+}: {
+  value: number | null;
+  toPar: number | null;
+  onChange: (v: number | null) => void;
+  label: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (toPar === null || !ref.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const big = toPar <= -1;
+    ref.current.animate(
+      [
+        { transform: "scale(1)" },
+        { transform: `scale(${big ? 1.25 : 1.12})` },
+        { transform: "scale(1)" },
+      ],
+      { duration: big ? 420 : 260, easing: "cubic-bezier(.3,1.6,.5,1)" },
+    );
+  }, [toPar]);
+  return (
+    <input
+      ref={ref}
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      maxLength={2}
+      enterKeyHint="next"
+      aria-label={label}
+      value={value ?? ""}
+      onChange={(e) => {
+        const digits = e.target.value.replace(/\D/g, "");
+        onChange(digits === "" ? null : Number(digits));
+      }}
+      onFocus={(e) => e.target.select()}
+      className={`mx-auto block size-11 border px-0 text-center text-base tabular-nums transition-colors ${resultStyle(toPar)}`}
     />
   );
 }
@@ -160,15 +237,16 @@ export default function ScoreEntryCard({
         <td className={td}>{r.par}</td>
         <td className={`${td} text-xs text-muted`}>{r.strokeIndex}</td>
         <td className={`${td} relative`}>
-          <NumberCell
+          <ScoreCell
             label={`Hole ${r.hole} score`}
             value={e.score}
+            toPar={r.toPar}
             onChange={(v) => setHole(i, { score: v })}
           />
           {r.shots > 0 && (
             <span
               aria-label={`Gets ${r.shots}`}
-              className="pointer-events-none absolute top-0.5 right-0 text-[10px] leading-none text-muted"
+              className="pointer-events-none absolute -top-0.5 right-0 text-[10px] leading-none text-muted"
             >
               {"•".repeat(r.shots)}
             </span>
