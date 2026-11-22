@@ -12,10 +12,9 @@ const fir = [1, 0, 1, 0, null, 1, null, 0, 1, 0, 0, 1, null, 1, 0, 1, null, 0];
 const entries: HoleEntry[] = scores.map((score, i) => ({
   score,
   putts: putts[i],
-  fairway: fir[i] === null ? null : fir[i] ? "hit" : "left",
+  fir: fir[i] === null ? null : fir[i] === 1,
+  gir: null,
   penalties: null,
-  bunker: false,
-  chips: null,
 }));
 
 test("matches the 15 Nov scorecard", () => {
@@ -41,6 +40,15 @@ test("matches the 15 Nov scorecard", () => {
   assert.deepEqual([card.total.scrambleMade, card.total.scrambleOf], [2, 9]);
   assert.deepEqual([card.out.firHit, card.out.firOf], [4, 7]);
   assert.deepEqual([card.out.girHit, card.out.girOf], [5, 9]);
+});
+
+test("GIR set by hand beats the worked-out one", () => {
+  const e = entries.map((x) => ({ ...x }));
+  e[0].gir = true; // hole 1: 5 with 1 putt, worked out as missed
+  const card = scorecard(LAMBOURNE_ORANGE, e, 6);
+  assert.equal(card.rows[0].gir, true);
+  assert.equal(card.rows[0].scramble, null);
+  assert.deepEqual([card.total.girHit, card.total.scrambleOf], [10, 8]);
 });
 
 test("handicap strokes", () => {

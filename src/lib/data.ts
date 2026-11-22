@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "./supabase";
-import type { Fairway, HoleEntry, TeeHoles } from "./golf";
+import type { HoleEntry, TeeHoles } from "./golf";
 
 export type Tee = {
   id: string;
@@ -25,10 +25,9 @@ export type HoleRow = {
   hole: number;
   score: number | null;
   putts: number | null;
-  fairway: Fairway | null;
+  fir: boolean | null;
+  gir: boolean | null; // null: worked out from score and putts
   penalties: number | null;
-  bunker: boolean;
-  chips: number | null;
 };
 
 export type Round = {
@@ -58,10 +57,9 @@ export function entriesFor(round: Round): HoleEntry[] {
     return {
       score: h?.score ?? null,
       putts: h?.putts ?? null,
-      fairway: h?.fairway ?? null,
+      fir: h?.fir ?? null,
+      gir: h?.gir ?? null,
       penalties: h?.penalties ?? null,
-      bunker: h?.bunker ?? false,
-      chips: h?.chips ?? null,
     };
   });
 }

@@ -64,8 +64,6 @@ export default function RoundPage() {
     round.playing_handicap,
   );
   const t = card.total;
-  const bunkers = round.hole_scores.filter((h) => h.bunker).length;
-  const chips = round.hole_scores.reduce((s, h) => s + (h.chips ?? 0), 0);
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -138,9 +136,6 @@ export default function RoundPage() {
 
       <p className="mt-3 text-xs text-muted">
         {t.onePutts} one-putts · {t.threePutts} three-putts
-        {bunkers > 0 &&
-          ` · ${bunkers} greenside bunker${bunkers > 1 ? "s" : ""}`}
-        {chips > 0 && ` · ${chips} chip${chips > 1 ? "s" : ""}`}
       </p>
       {round.notes && (
         <p className={`${cardClass} mt-4 p-3 text-sm whitespace-pre-wrap`}>

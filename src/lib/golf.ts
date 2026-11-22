@@ -1,24 +1,22 @@
 // Golf maths. Everything shown about a round (net, Stableford points, GIR,
 // scrambling, birdies…) is worked out here from what's entered, never stored.
 
-export type Fairway = "hit" | "left" | "right" | "short";
-
 export type TeeHoles = {
   par: number[];
   yards: (number | null)[];
   strokeIndex: number[];
 };
 
+// What's entered for a hole: the scorecard's input columns.
 export type HoleEntry = {
   score: number | null; // null: picked up / no score
   putts: number | null;
-  fairway: Fairway | null; // par 4s and 5s only
+  fir: boolean | null; // fairway hit, par 4s and 5s only
+  gir: boolean | null; // null: worked out from score and putts (autoGir)
   penalties: number | null;
-  bunker: boolean; // in a greenside bunker
-  chips: number | null; // chips and pitches around the green
 };
 
-export type HoleResult = HoleEntry & {
+export type HoleResult = Omit<HoleEntry, "fir" | "gir"> & {
   hole: number; // 1-based
   par: number;
   yards: number | null;
@@ -27,7 +25,7 @@ export type HoleResult = HoleEntry & {
   net: number | null;
   points: number;
   fir: boolean | null; // null on par 3s or when not entered
-  gir: boolean | null; // null without a score and putts
+  gir: boolean | null; // as entered, else worked out; null without score and putts
   scramble: boolean | null; // only when the green was missed
   toPar: number | null;
 };
@@ -59,6 +57,11 @@ export const stablefordPoints = (par: number, net: number | null) =>
 export const isGir = (par: number, score: number, putts: number) =>
   score - putts <= par - 2;
 
+// GIR from score and putts, used unless it's been set by hand (e.g. putting from
+// the fringe, which this can't tell apart).
+export const autoGir = (par: number, e: HoleEntry) =>
+  e.score === null || e.putts === null ? null : isGir(par, e.score, e.putts);
+
 export function holeResult(
   i: number,
   tee: TeeHoles,
@@ -68,12 +71,13 @@ export function holeResult(
   const par = tee.par[i];
   const n = tee.par.length;
   const shots = shotsReceived(playingHandicap, tee.strokeIndex[i], n);
-  const { score, putts, fairway } = entry;
+  const { score } = entry;
   const net = score === null ? null : score - shots;
-  const gir =
-    score === null || putts === null ? null : isGir(par, score, putts);
+  const gir = entry.gir ?? autoGir(par, entry);
   return {
-    ...entry,
+    score,
+    putts: entry.putts,
+    penalties: entry.penalties,
     hole: i + 1,
     par,
     yards: tee.yards[i] ?? null,
@@ -81,7 +85,7 @@ export function holeResult(
     shots,
     net,
     points: stablefordPoints(par, net),
-    fir: par < 4 || fairway === null ? null : fairway === "hit",
+    fir: par < 4 ? null : entry.fir,
     gir,
     scramble: gir === false && score !== null ? score <= par : null,
     toPar: score === null ? null : score - par,
@@ -94,6 +98,8 @@ export type Totals = {
   par: number;
   gross: number | null; // null if any hole has no score
   net: number | null;
+  grossSoFar: number; // holes with a score only, for a card being filled in
+  netSoFar: number;
   points: number;
   putts: number;
   penalties: number;
@@ -124,6 +130,8 @@ export function totals(rows: HoleResult[]): Totals {
     par: sum((r) => r.par),
     gross,
     net: complete ? sum((r) => r.net!) : null,
+    grossSoFar: sum((r) => r.score ?? 0),
+    netSoFar: sum((r) => r.net ?? 0),
     points: sum((r) => r.points),
     putts: sum((r) => r.putts ?? 0),
     penalties: sum((r) => r.penalties ?? 0),
@@ -149,10 +157,9 @@ export const pct = (hit: number, of: number) =>
 export const blankEntry = (): HoleEntry => ({
   score: null,
   putts: null,
-  fairway: null,
+  fir: null,
+  gir: null,
   penalties: null,
-  bunker: false,
-  chips: null,
 });
 
 export function scorecard(

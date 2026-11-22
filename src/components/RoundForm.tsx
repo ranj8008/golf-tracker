@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import SegmentedControl from "@/components/SegmentedControl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ScoreEntryCard from "@/components/ScoreEntryCard";
 import {
   cardClass,
   Dropdown,
@@ -23,19 +23,13 @@ import {
   type Round,
   type Tee,
 } from "@/lib/data";
-import {
-  blankEntry,
-  scorecard,
-  type Fairway,
-  type HoleEntry,
-  type Totals,
-} from "@/lib/golf";
+import { blankEntry, scorecard, type HoleEntry } from "@/lib/golf";
 
-// Entering a round after playing it: the round's details, then the whole card as a
-// grid, one row per hole. Scores shows score, putts and fairway; Extras shows
-// penalties, greenside bunker and chips. Points add up as you go.
+// Entering a round after playing it: the round's details, then the scorecard with
+// score, putts, FIR, GIR and penalties typed into it (ScoreEntryCard).
 
-const DRAFT_KEY = "golf-tracker:new-round";
+// v2: holes are score, putts, FIR, GIR and penalties (older drafts are ignored).
+const DRAFT_KEY = "golf-tracker:new-round-v2";
 
 type Details = {
   course_id: string;
@@ -47,47 +41,6 @@ type Details = {
 };
 
 type Draft = { details: Details; entries: HoleEntry[] };
-
-const fairways: { value: Fairway; label: string }[] = [
-  { value: "hit", label: "Hit" },
-  { value: "left", label: "Left" },
-  { value: "right", label: "Right" },
-  { value: "short", label: "Short" },
-];
-
-const numBox =
-  "min-h-11 w-full rounded-lg border border-line bg-background px-1 text-center text-base tabular-nums";
-
-function NumberBox({
-  value,
-  onChange,
-  label,
-  invalid,
-}: {
-  value: number | null;
-  onChange: (v: number | null) => void;
-  label: string;
-  invalid?: boolean;
-}) {
-  return (
-    <input
-      type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      maxLength={2}
-      enterKeyHint="next"
-      aria-label={label}
-      aria-invalid={invalid || undefined}
-      value={value ?? ""}
-      onChange={(e) => {
-        const digits = e.target.value.replace(/\D/g, "");
-        onChange(digits === "" ? null : Number(digits));
-      }}
-      onFocus={(e) => e.target.select()}
-      className={`${numBox} ${invalid ? "border-down text-down" : ""}`}
-    />
-  );
-}
 
 function readDraft(): Draft | null {
   try {
@@ -141,16 +94,14 @@ export default function RoundForm({ round }: { round?: Round }) {
             ? {
                 score: h.score,
                 putts: h.putts,
-                fairway: h.fairway,
+                fir: h.fir,
+                gir: h.gir,
                 penalties: h.penalties,
-                bunker: h.bunker,
-                chips: h.chips,
               }
             : blankEntry();
         })
       : sized([], 18),
   );
-  const [view, setView] = useState<"scores" | "extras">("scores");
   const [state, setState] = useState<"idle" | "busy">("idle");
   const [error, setError] = useState<string | null>(null);
   const [confirmMissing, setConfirmMissing] = useState(false);
@@ -260,7 +211,7 @@ export default function RoundForm({ round }: { round?: Round }) {
         entries.map((x, i) => ({
           ...x,
           // Fairways only count on par 4s and 5s.
-          fairway: tee.par[i] >= 4 ? x.fairway : null,
+          fir: tee.par[i] >= 4 ? x.fir : null,
         })),
       );
       if (!editing) writeDraft(null);
@@ -293,16 +244,6 @@ export default function RoundForm({ round }: { round?: Round }) {
         </Link>
       </div>
     );
-
-  const subtotal = (label: string, t: Totals) => (
-    <div className="flex min-h-10 items-center gap-2 border-y-2 border-accent/60 bg-surface px-2 text-sm font-semibold tabular-nums">
-      <span className="w-[4.5rem] shrink-0">{label}</span>
-      <span className="flex-1 text-muted">Par {t.par}</span>
-      <span className="w-16 text-right">{t.gross ?? "–"}</span>
-      <span className="w-16 text-right">{t.putts || "–"} putts</span>
-      <span className="w-14 text-right">{t.points} pts</span>
-    </div>
-  );
 
   return (
     <form onSubmit={save} className="space-y-4">
@@ -370,149 +311,15 @@ export default function RoundForm({ round }: { round?: Round }) {
 
       {tee && card && (
         <>
-          <SegmentedControl
-            label="Show"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "scores", label: "Score, putts, fairway" },
-              { value: "extras", label: "Penalties, bunker, chips" },
-            ]}
+          <ScoreEntryCard
+            rows={card.rows}
+            out={card.out}
+            inn={card.in}
+            total={card.total}
+            entries={entries}
+            setHole={setHole}
+            badPutts={badPutts}
           />
-
-          <div className="overflow-hidden rounded-xl border border-line bg-card">
-            <div className="flex items-center gap-2 border-b border-line px-2 py-2 text-xs text-muted">
-              <span className="w-[4.5rem] shrink-0">Hole</span>
-              {view === "scores" ? (
-                <>
-                  <span className="w-12 text-center">Score</span>
-                  <span className="w-12 text-center">Putts</span>
-                  <span className="flex-1 text-center">Fairway</span>
-                  <span className="w-8 text-right">Pts</span>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-center">Penalties</span>
-                  <span className="flex-1 text-center">Greenside bunker</span>
-                  <span className="flex-1 text-center">Chips</span>
-                </>
-              )}
-            </div>
-            {card.rows.map((r, i) => (
-              <Fragment key={r.hole}>
-                <div className="flex items-center gap-2 border-b border-line px-2 py-1 last:border-0">
-                  <span className="flex w-[4.5rem] shrink-0 flex-col leading-tight">
-                    <span className="font-semibold">
-                      {r.hole}
-                      {r.shots > 0 && (
-                        <span
-                          className="ml-0.5 text-xs text-muted"
-                          aria-label={`gets ${r.shots}`}
-                        >
-                          {"•".repeat(r.shots)}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-xs text-muted">
-                      Par {r.par} · SI {r.strokeIndex}
-                    </span>
-                  </span>
-                  {view === "scores" ? (
-                    <>
-                      <span className="w-12">
-                        <NumberBox
-                          label={`Hole ${r.hole} score`}
-                          value={entries[i].score}
-                          onChange={(v) => setHole(i, { score: v })}
-                        />
-                      </span>
-                      <span className="w-12">
-                        <NumberBox
-                          label={`Hole ${r.hole} putts`}
-                          value={entries[i].putts}
-                          invalid={badPutts.includes(r.hole)}
-                          onChange={(v) => setHole(i, { putts: v })}
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        {r.par >= 4 ? (
-                          <select
-                            aria-label={`Hole ${r.hole} fairway`}
-                            value={entries[i].fairway ?? ""}
-                            onChange={(e) =>
-                              setHole(i, {
-                                fairway: (e.target.value || null) as Fairway,
-                              })
-                            }
-                            className={`${numBox} ${
-                              entries[i].fairway === "hit"
-                                ? "text-up"
-                                : entries[i].fairway
-                                  ? "text-down"
-                                  : "text-muted"
-                            }`}
-                          >
-                            <option value="">–</option>
-                            {fairways.map((f) => (
-                              <option key={f.value} value={f.value}>
-                                {f.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="block text-center text-xs text-muted">
-                            Par 3
-                          </span>
-                        )}
-                      </span>
-                      <span className="w-8 text-right font-semibold tabular-nums">
-                        {r.score === null ? "" : r.points}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1">
-                        <NumberBox
-                          label={`Hole ${r.hole} penalty strokes`}
-                          value={entries[i].penalties}
-                          onChange={(v) => setHole(i, { penalties: v })}
-                        />
-                      </span>
-                      <span className="flex-1">
-                        <button
-                          type="button"
-                          aria-pressed={entries[i].bunker}
-                          aria-label={`Hole ${r.hole} greenside bunker`}
-                          onClick={() =>
-                            setHole(i, { bunker: !entries[i].bunker })
-                          }
-                          className={`min-h-11 w-full rounded-lg border text-sm font-medium ${
-                            entries[i].bunker
-                              ? "border-accent bg-accent-soft text-on-accent-soft"
-                              : "border-line bg-background text-muted"
-                          }`}
-                        >
-                          {entries[i].bunker ? "Yes" : "No"}
-                        </button>
-                      </span>
-                      <span className="flex-1">
-                        <NumberBox
-                          label={`Hole ${r.hole} chips`}
-                          value={entries[i].chips}
-                          onChange={(v) => setHole(i, { chips: v })}
-                        />
-                      </span>
-                    </>
-                  )}
-                </div>
-                {r.hole === 9 &&
-                  card.rows.length === 18 &&
-                  subtotal("Out", card.out)}
-              </Fragment>
-            ))}
-            {card.rows.length === 18 && subtotal("In", card.in)}
-            {subtotal("Total", card.total)}
-          </div>
 
           <label className="block">
             <span className={labelClass}>Notes</span>
@@ -538,7 +345,7 @@ export default function RoundForm({ round }: { round?: Round }) {
           {card && (
             <span className="text-sm text-muted tabular-nums">
               <strong className="text-foreground">
-                {card.total.gross ?? "–"}
+                {card.total.grossSoFar || "–"}
               </strong>{" "}
               gross ·{" "}
               <strong className="text-foreground">{card.total.points}</strong>{" "}

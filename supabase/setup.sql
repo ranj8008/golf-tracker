@@ -73,6 +73,14 @@ create table if not exists public.hole_scores (
 );
 alter table public.hole_scores enable row level security;
 
+-- Fairway hit and green in regulation as yes/no (gir left empty means "work it out
+-- from score and putts"). Earlier versions kept a fairway direction instead; it's
+-- copied across once, and that column, bunker and chips are no longer used.
+alter table public.hole_scores add column if not exists fir boolean;
+alter table public.hole_scores add column if not exists gir boolean;
+update public.hole_scores set fir = (fairway = 'hit')
+  where fir is null and fairway is not null;
+
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -183,10 +191,10 @@ begin
     end if;
   end if;
   delete from public.hole_scores where round_id = rid;
-  insert into public.hole_scores (round_id, hole, score, putts, fairway, penalties, bunker, chips)
-    select rid, h.hole, h.score, h.putts, h.fairway, h.penalties, coalesce(h.bunker, false), h.chips
+  insert into public.hole_scores (round_id, hole, score, putts, fir, gir, penalties)
+    select rid, h.hole, h.score, h.putts, h.fir, h.gir, h.penalties
     from jsonb_to_recordset(p_holes)
-      as h(hole int, score int, putts int, fairway text, penalties int, bunker boolean, chips int);
+      as h(hole int, score int, putts int, fir boolean, gir boolean, penalties int);
   return rid;
 end;
 $$;
