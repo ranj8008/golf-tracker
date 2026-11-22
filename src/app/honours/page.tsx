@@ -10,7 +10,6 @@ import {
   highlights,
   scoringRecords,
   shortGameRecords,
-  subEighty,
   type GroupRow,
   type Honour,
 } from "@/lib/honours";
@@ -173,7 +172,6 @@ export default function HonoursPage() {
   const statsRounds = inView.filter((r) => !r.scoresOnly).length;
   const special = useMemo(() => highlights(inView), [inView]);
   const years = useMemo(() => byYear(inView), [inView]);
-  const sub80 = useMemo(() => subEighty(inView), [inView]);
   const courseRows = useMemo(() => byCourse(inView), [inView]);
 
   return (
@@ -223,43 +221,6 @@ export default function HonoursPage() {
                         </span>
                         <span className="truncate text-xs text-muted">
                           {shortDate(h.stats.round.played_on)} · {h.stats.round.course.name}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Board>
-
-          <Board
-            title="Breaking 80"
-            note={
-              sub80.length
-                ? `${sub80.length} round${sub80.length === 1 ? "" : "s"} of 79 or better, newest first.`
-                : undefined
-            }
-          >
-            {sub80.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-muted">Not yet.</p>
-            ) : (
-              <ul>
-                {sub80.map((r) => (
-                  <li key={r.round.id} className="border-b border-line last:border-0">
-                    <Link
-                      href={`/rounds/${r.round.id}`}
-                      className="flex min-h-12 items-center gap-3 px-4 py-2 active:bg-surface"
-                    >
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="text-sm font-medium">{shortDate(r.round.played_on)}</span>
-                        <span className="text-xs text-muted">
-                          {r.round.course.name} · {r.round.tee.name}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-base font-bold tabular-nums">
-                        {r.gross}{" "}
-                        <span className="text-sm font-normal text-muted">
-                          ({r.gross! - r.par > 0 ? `+${r.gross! - r.par}` : r.gross! - r.par === 0 ? "E" : `−${r.par - r.gross!}`})
                         </span>
                       </span>
                     </Link>

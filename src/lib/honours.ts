@@ -138,13 +138,6 @@ export function highlights(rounds: RoundStats[]): Highlight[] {
     .sort((a, b) => b.stats.round.played_on.localeCompare(a.stats.round.played_on));
 }
 
-// Every round of 79 or better, newest first.
-export function subEighty(rounds: RoundStats[]): RoundStats[] {
-  return rounds
-    .filter(brokeEighty)
-    .sort((a, b) => b.round.played_on.localeCompare(a.round.played_on));
-}
-
 export type GroupRow = {
   key: string; // year, or course id
   label: string;
