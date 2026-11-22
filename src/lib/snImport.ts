@@ -84,7 +84,7 @@ export type Plan = {
   matchedTees: Map<string, string>; // ServiceNow tee id -> our tee id
   rounds: PlannedRound[]; // to import
   alreadyImported: number;
-  possibleDuplicates: PlannedRound[]; // imported too, but same date and tees as a round entered here
+  possibleDuplicates: PlannedRound[]; // same date and tees as a round entered here
   problems: string[]; // rounds that can't be imported
   statsRounds: number;
   girKept: number; // holes where ServiceNow's GIR differs from score and putts
@@ -238,7 +238,7 @@ export function plan(files: SnFiles, existing: Existing): Plan {
     const ourTee = matchedTees.get(r.tee);
     if (ourTee && existing.roundDates.has(`${r.round_date}|${ourTee}`))
       possibleDuplicates.push(planned);
-    rounds.push(planned);
+    else rounds.push(planned);
   }
   rounds.sort((a, b) => a.played_on.localeCompare(b.played_on));
   // Counted over the rounds that will be imported, not skipped ones.

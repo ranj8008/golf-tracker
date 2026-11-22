@@ -284,9 +284,8 @@ export default function ImportPage() {
           {plan.possibleDuplicates.length > 0 && (
             <div className="rounded-lg bg-surface p-3">
               <p className="mb-1 font-medium">
-                Imported as well, though you already have a round on the same
-                day on the same tees (delete the extra copy afterwards if
-                it&apos;s the same round):
+                Skipped: you already entered a round on the same day on the same
+                tees
               </p>
               <ul className="list-inside list-disc text-muted">
                 {plan.possibleDuplicates.map((r) => (
