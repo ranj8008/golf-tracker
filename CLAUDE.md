@@ -11,13 +11,14 @@ propose options first.
 
 Pushing to the live branch deploys straight to the live site (Vercel) and, when
 `supabase/setup.sql` changes, updates the database (the Set up Supabase Action),
-so nothing should be pushed that the user hasn't agreed to.
+so only push work the user has agreed to.
 
-## Confirm before pushing
+## Commit and push automatically
 
-Build and test here, then show the user what's been done (screenshots and a short
-summary) and push only when they say so. No preview deployments or pull requests:
-the user reviews from screenshots, then the branch is pushed and goes live.
+Once agreed work is built and tested, commit and push it straight away (it goes
+live), then tell the user what changed, with screenshots where it helps. No need
+to ask before pushing. This doesn't change the rule above: what something will
+look like and how it works is still agreed before it's built.
 
 Bug fixes the user has asked for can go ahead, but say what will change first if
 it affects how anything looks or works.
