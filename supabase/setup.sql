@@ -81,6 +81,23 @@ alter table public.hole_scores add column if not exists gir boolean;
 update public.hole_scores set fir = (fairway = 'hit')
   where fir is null and fairway is not null;
 
+-- Imported records remember where they came from (e.g. "servicenow:<sys_id>"), so
+-- running an import again skips what's already here. PCC is the playing conditions
+-- calculation from the handicap system (normally 0), kept for handicap stats.
+alter table public.courses add column if not exists source_ref text;
+alter table public.tees add column if not exists source_ref text;
+alter table public.rounds add column if not exists source_ref text;
+alter table public.rounds add column if not exists pcc int not null default 0;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'rounds_pcc_check') then
+    alter table public.rounds add constraint rounds_pcc_check check (pcc between -1 and 3);
+  end if;
+end $$;
+create unique index if not exists courses_source_ref on public.courses (user_id, source_ref);
+create unique index if not exists tees_source_ref on public.tees (user_id, source_ref);
+create unique index if not exists rounds_source_ref on public.rounds (user_id, source_ref);
+
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -167,14 +184,17 @@ declare
   rid uuid := nullif(p_round ->> 'id', '')::uuid;
 begin
   if rid is null then
-    insert into public.rounds (course_id, tee_id, played_on, handicap_index, playing_handicap, notes)
+    insert into public.rounds
+        (course_id, tee_id, played_on, handicap_index, playing_handicap, notes, pcc, source_ref)
     values (
       (p_round ->> 'course_id')::uuid,
       (p_round ->> 'tee_id')::uuid,
       (p_round ->> 'played_on')::date,
       (p_round ->> 'handicap_index')::numeric,
       (p_round ->> 'playing_handicap')::int,
-      nullif(trim(p_round ->> 'notes'), '')
+      nullif(trim(p_round ->> 'notes'), ''),
+      coalesce((p_round ->> 'pcc')::int, 0),
+      nullif(p_round ->> 'source_ref', '')
     )
     returning id into rid;
   else

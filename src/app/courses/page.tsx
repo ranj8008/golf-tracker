@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import TeeEditor from "@/components/TeeEditor";
 import {
@@ -136,6 +137,12 @@ export default function CoursesPage() {
           </section>
         ))}
       </div>
+
+      <p className="mt-8 text-center text-xs text-muted">
+        <Link href="/import" className="inline-flex min-h-11 items-center underline">
+          Import rounds from ServiceNow
+        </Link>
+      </p>
 
       {editing?.kind === "tee" && (
         <TeeEditor
